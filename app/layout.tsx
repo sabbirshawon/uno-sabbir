@@ -3,15 +3,11 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 
 export const metadata: Metadata = {
-  title: "UNO Sabbir",
-  description: "Multiplayer UNO with Friends",
+  title: "UNO Online | Next.js + Firebase",
+  description: "A multiplayer UNO game built with Next.js, Firebase Auth, Cloud Firestore, and server-side move validation.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>

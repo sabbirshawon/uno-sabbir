@@ -1,20 +1,30 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     match /unoRooms/{roomId} {
-      allow create: if request.auth != null
-        && request.resource.data.hostUid == request.auth.uid;
+      // Public room state has no private hands or private deck.
+      allow read: if request.auth != null;
 
-      allow read: if request.auth != null
-        && request.auth.uid in resource.data.playerOrder;
+      // All writes are done by Next.js API routes through Firebase Admin SDK.
+      allow create, update, delete: if false;
 
-      // MVP rule: participants can update the room. This keeps the app fully client-side.
-      // For production, move turn validation/deck mutation into Cloud Functions or a server action
-      // using Firebase Admin, because any trusted client rule is vulnerable to cheating.
-      allow update: if request.auth != null
-        && request.auth.uid in resource.data.playerOrder;
+      match /hands/{userId} {
+        // Each player can only read their own private hand.
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false;
+      }
 
-      allow delete: if false;
+      match /private/{docId} {
+        // Hidden draw pile/discard history. Server only.
+        allow read, write: if false;
+      }
+
+      match /chat/{messageId} {
+        // Authenticated users can listen to chat. Sending goes through server route.
+        allow read: if request.auth != null;
+        allow write: if false;
+      }
     }
   }
 }

@@ -1,100 +1,108 @@
-# UNO Online — Next.js + Firebase
+# UNO Online Pro — Next.js + Firebase
 
-A clean multiplayer UNO MVP built with:
+A multiplayer UNO starter built with:
 
 - Next.js App Router
 - Firebase Authentication with Google login
-- Cloud Firestore real-time room sync
-- TypeScript
-- Fully client-side game actions using Firestore transactions
+- Cloud Firestore real-time room updates
+- Firebase Admin SDK inside Next.js API routes
+- Server-side move validation
+- Private player hands in Firestore subcollections
+- Spectator mode, chat, emoji reactions, rematch, reconnect presence, sound effects, and mobile-first drag/drop cards
+
+## What changed in this version
+
+This version is no longer a purely client-side MVP. Game moves go through Next.js API routes, where the Firebase Admin SDK verifies the user's Firebase ID token and validates the move before updating Firestore.
+
+Private data is separated:
+
+```txt
+unoRooms/{roomCode}                  public room state
+unoRooms/{roomCode}/hands/{uid}      private hand, readable only by that player
+unoRooms/{roomCode}/private/state    private draw pile/discard history, server only
+unoRooms/{roomCode}/chat/{messageId} room chat messages
+```
 
 ## Features
 
-- Google login
-- Create private UNO room
-- Join room by code
+- One Google login button
+- Create room / join room
+- Join active games as spectator
 - 2–4 players
-- Real-time room updates
-- UNO deck generation and shuffling
-- Turn system
-- Reverse, Skip, Draw Two, Wild, Wild Draw Four
-- Draw and pass turn
-- Call UNO
-- Winner state
-- Responsive glassmorphism UI
-
-## Important MVP note
-
-This starter keeps all player hands and game state inside one Firestore room document. That makes it easy to run and understand, but it is not cheat-proof because a technical player could inspect client data or modify requests.
-
-For production, move game validation into one of these:
-
-1. Firebase Cloud Functions using Firebase Admin SDK
-2. Next.js Route Handlers / Server Actions with Firebase Admin SDK
-3. A dedicated game server with WebSockets
+- Server-side validation for start, play, draw, pass, UNO, rematch, chat, and presence
+- Each player's hand stored in a private subcollection
+- Hidden draw pile stored in a server-only private document
+- Real-time Firestore subscriptions for room, own hand, and chat
+- Reconnect/online presence heartbeat
+- Rematch button; rematch auto-starts when all players request it
+- Chat and emoji reactions
+- Room expiration cleanup API route
+- Sound effects using Web Audio API
+- Mobile-first card UI with click-to-play and drag/drop-to-discard
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Install
 
 ```bash
 npm install
 ```
 
-### 2. Create Firebase project
+### 2. Firebase client env
 
-Create a Firebase project from Firebase Console.
-
-Enable:
-
-- Authentication → Sign-in method → Google
-- Firestore Database
-
-### 3. Add Firebase web config
-
-Copy `.env.example` to `.env.local`:
+Create `.env.local`:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Fill in your Firebase web app config:
+Add your Firebase Web App config:
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=...
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-### 4. Add authorized domain
+### 3. Firebase Admin env for server-side validation
 
-In Firebase Console:
+Firebase Console:
 
-Authentication → Settings → Authorized domains
+**Project settings → Service accounts → Generate new private key**
 
-Add:
+Then add these to `.env.local` locally and Vercel Environment Variables:
 
-```txt
-localhost
+```env
+FIREBASE_ADMIN_PROJECT_ID=your-project
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n"
+CRON_SECRET=change_this_random_string
 ```
 
-For deployment, add your production domain too.
+On Vercel, paste the private key exactly, keeping `\n` line breaks. Do not commit `.env` or `.env.local` to GitHub.
 
-### 5. Deploy Firestore rules
+### 4. Enable Firebase services
 
-Install Firebase CLI if needed:
+Firebase Console:
+
+- Authentication → Sign-in method → Google → Enable
+- Authentication → Settings → Authorized domains → add your Vercel domain, for example `uno-sabbir.vercel.app`
+- Firestore Database → Create database
+
+### 5. Publish Firestore rules
+
+Paste `firestore.rules` in:
+
+**Firestore Database → Rules → Publish**
+
+Or use Firebase CLI:
 
 ```bash
-npm install -g firebase-tools
-firebase login
-firebase use your_project_id
 firebase deploy --only firestore:rules
 ```
-
-Or paste `firestore.rules` manually in Firebase Console.
 
 ### 6. Run locally
 
@@ -108,49 +116,26 @@ Open:
 http://localhost:3000
 ```
 
-## How to play-test
+## Vercel deployment
 
-1. Open the app in Chrome.
-2. Login with Google.
-3. Create a room.
-4. Copy the room code.
-5. Open another browser/profile/device.
-6. Login with another Google account.
-7. Join the room using the code.
-8. Host clicks Start Game.
+1. Push the project to GitHub.
+2. Import the repo in Vercel.
+3. Add all `NEXT_PUBLIC_FIREBASE_*` variables.
+4. Add all `FIREBASE_ADMIN_*` variables.
+5. Deploy.
+6. Add the Vercel domain in Firebase Authentication authorized domains.
+7. Publish Firestore rules.
 
-## Project structure
+## Room expiration cleanup
+
+This project includes:
 
 ```txt
-app/
-  globals.css
-  layout.tsx
-  page.tsx
-components/
-  GameRoom.tsx
-  Lobby.tsx
-  LoginPanel.tsx
-  UnoCardView.tsx
-hooks/
-  useAuth.tsx
-  useRoom.ts
-lib/
-  firebase.ts
-  gameActions.ts
-  types.ts
-  uno.ts
-firestore.rules
-firebase.json
+GET /api/cron/expire-rooms?secret=YOUR_CRON_SECRET
 ```
 
-## Next production improvements
+It marks expired rooms as `expired`. On Vercel, you can create a cron job to call this endpoint every hour.
 
-- Store each player's hand in private subcollections.
-- Validate all moves server-side.
-- Add reconnect handling.
-- Add rematch button.
-- Add spectator mode.
-- Add chat and emoji reactions.
-- Add room expiration cleanup.
-- Add sound effects.
-- Add mobile-first card drag-and-drop.
+## Production notes
+
+This is much stronger than the first MVP because hands and hidden deck state are not readable by other players and moves are validated on the server. For a heavy production game, a dedicated WebSocket game server can still be better for ultra-low latency, timers, matchmaking, and advanced anti-cheat monitoring.

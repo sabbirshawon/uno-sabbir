@@ -1,8 +1,8 @@
 node_modules
 .next
 out
+.env
 .env.local
 .env*.local
+.vercel
 .DS_Store
-firebase-debug.log
-firestore-debug.log

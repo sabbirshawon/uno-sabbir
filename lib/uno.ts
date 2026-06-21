@@ -5,6 +5,9 @@ const NUMBER_VALUES: UnoValue[] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", 
 const ACTION_VALUES: UnoValue[] = ["skip", "reverse", "draw2"];
 
 export const PLAY_COLORS = COLORS;
+export const STARTING_HAND_SIZE = 7;
+export const MAX_PLAYERS = 4;
+export const ROOM_TTL_HOURS = 24;
 
 export function createDeck(): UnoCard[] {
   const deck: UnoCard[] = [];
@@ -66,20 +69,25 @@ export function isActionCard(card: UnoCard): boolean {
   return ["skip", "reverse", "draw2", "wild", "wild4"].includes(card.value);
 }
 
-export function isPlayable(card: UnoCard, room: UnoRoom): boolean {
+export function isPlayable(card: UnoCard, room: Pick<UnoRoom, "topCard" | "activeColor">): boolean {
   if (!room.topCard) return true;
   if (card.color === "wild") return true;
   return card.color === room.activeColor || card.value === room.topCard.value;
 }
 
-export function nextPlayerIndex(room: UnoRoom, step = 1, direction = room.direction): number {
+export function nextPlayerIndex(room: Pick<UnoRoom, "playerOrder" | "currentPlayerIndex" | "direction">, step = 1, direction = room.direction): number {
   const total = room.playerOrder.length;
+  if (total === 0) return 0;
   return (room.currentPlayerIndex + direction * step + total * 10) % total;
 }
 
-export function drawCards(room: UnoRoom, count: number): { room: UnoRoom; cards: UnoCard[] } {
-  let drawPile = [...room.drawPile];
-  let discardPile = [...room.discardPile];
+export function drawCardsFromState(
+  drawPileInput: UnoCard[],
+  discardPileInput: UnoCard[],
+  count: number,
+): { drawPile: UnoCard[]; discardPile: UnoCard[]; cards: UnoCard[] } {
+  let drawPile = [...drawPileInput];
+  let discardPile = [...discardPileInput];
   const cards: UnoCard[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -94,10 +102,7 @@ export function drawCards(room: UnoRoom, count: number): { room: UnoRoom; cards:
     cards.push(card);
   }
 
-  return {
-    room: { ...room, drawPile, discardPile },
-    cards,
-  };
+  return { drawPile, discardPile, cards };
 }
 
 export function getInitialTopCard(deck: UnoCard[]): { topCard: UnoCard; drawPile: UnoCard[] } {

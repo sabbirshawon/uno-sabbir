@@ -23,16 +23,31 @@ export type UnoCard = {
   value: UnoValue;
 };
 
-export type RoomStatus = "waiting" | "playing" | "finished";
+export type RoomStatus = "waiting" | "playing" | "finished" | "expired";
+export type PlayerRole = "player" | "spectator";
 
-export type UnoPlayer = {
+export type PublicPlayer = {
   uid: string;
   name: string;
   photoURL: string | null;
-  hand: UnoCard[];
+  role: PlayerRole;
   cardCount: number;
   unoCalled: boolean;
   joinedAt: number;
+  lastSeen: number;
+  online: boolean;
+};
+
+export type UnoHand = {
+  uid: string;
+  cards: UnoCard[];
+  updatedAt?: unknown;
+};
+
+export type PrivateRoomState = {
+  drawPile: UnoCard[];
+  discardPile: UnoCard[];
+  updatedAt?: unknown;
 };
 
 export type UnoRoom = {
@@ -40,15 +55,27 @@ export type UnoRoom = {
   status: RoomStatus;
   hostUid: string;
   playerOrder: string[];
-  players: Record<string, UnoPlayer>;
+  spectatorOrder: string[];
+  players: Record<string, PublicPlayer>;
   currentPlayerIndex: number;
   direction: 1 | -1;
   activeColor: PlayColor;
   topCard: UnoCard | null;
-  drawPile: UnoCard[];
-  discardPile: UnoCard[];
+  drawPileCount: number;
   winnerUid: string | null;
   lastAction: string;
+  rematchRequests: string[];
   createdAt: unknown;
   updatedAt: unknown;
+  expiresAt: unknown;
+};
+
+export type ChatMessage = {
+  id?: string;
+  uid: string;
+  name: string;
+  photoURL: string | null;
+  type: "text" | "emoji";
+  text: string;
+  createdAt: unknown;
 };
