@@ -3,8 +3,13 @@ import type { PlayColor } from "./types";
 
 type ApiPayload = Record<string, unknown>;
 
-async function apiRequest<T>(user: User, path: string, payload: ApiPayload = {}): Promise<T> {
-  const token = await user.getIdToken();
+async function apiRequest<T>(
+  user: User,
+  path: string,
+  payload: ApiPayload = {},
+): Promise<T> {
+  const token = await user.getIdToken(true);
+
   const response = await fetch(path, {
     method: "POST",
     headers: {
@@ -14,9 +19,26 @@ async function apiRequest<T>(user: User, path: string, payload: ApiPayload = {})
     body: JSON.stringify(payload),
   });
 
-  const data = (await response.json().catch(() => ({}))) as { error?: string } & T;
-  if (!response.ok) throw new Error(data.error || "Request failed");
-  return data;
+  const rawText = await response.text();
+
+  let data: ({ error?: string } & T) | null = null;
+
+  try {
+    data = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    console.error("Non-JSON API response:", rawText);
+  }
+
+  if (!response.ok) {
+    const message =
+      data?.error ||
+      rawText ||
+      `Request failed with status ${response.status}`;
+
+    throw new Error(message);
+  }
+
+  return data as T;
 }
 
 export function createRoomApi(user: User) {
