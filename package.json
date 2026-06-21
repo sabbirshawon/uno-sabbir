@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "firebase": "latest",
-    "firebase-admin": "latest",
-    "lucide-react": "latest",
-    "nanoid": "^5.0.7",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+  "firebase": "latest",
+  "firebase-admin": "13.6.1",
+  "lucide-react": "latest",
+  "nanoid": "^5.0.7",
+  "next": "latest",
+  "react": "latest",
+  "react-dom": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
