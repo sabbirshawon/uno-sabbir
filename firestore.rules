@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /unoRooms/{roomId} {
+      allow create: if request.auth != null
+        && request.resource.data.hostUid == request.auth.uid;
+
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.playerOrder;
+
+      // MVP rule: participants can update the room. This keeps the app fully client-side.
+      // For production, move turn validation/deck mutation into Cloud Functions or a server action
+      // using Firebase Admin, because any trusted client rule is vulnerable to cheating.
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.playerOrder;
+
+      allow delete: if false;
+    }
+  }
+}
