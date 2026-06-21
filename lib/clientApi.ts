@@ -8,7 +8,7 @@ async function apiRequest<T>(
   path: string,
   payload: ApiPayload = {},
 ): Promise<T> {
-  const token = await user.getIdToken(true);
+  const token = await user.getIdToken();
 
   const response = await fetch(path, {
     method: "POST",
