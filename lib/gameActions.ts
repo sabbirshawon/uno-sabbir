@@ -138,9 +138,13 @@ export async function playCard(code: string, user: User, card: UnoCard, chosenCo
     if (!cardInHand) throw new Error("This card is not in your hand");
     if (!isPlayable(cardInHand, room)) throw new Error("You cannot play this card now");
 
-    const selectedColor: PlayColor | undefined = cardInHand.color === "wild" ? chosenColor : (cardInHand.color as PlayColor);
-    if (!selectedColor || selectedColor === "wild") throw new Error("Choose a color for the wild card");
+    const selectedColor: PlayColor | undefined =
+      cardInHand.color === "wild" ? chosenColor : cardInHand.color;
 
+    if (!selectedColor) {
+      throw new Error("Choose a color for the wild card");
+    }
+    
     const updatedHand = player.hand.filter((item) => item.id !== cardInHand.id);
     const players = {
       ...room.players,
