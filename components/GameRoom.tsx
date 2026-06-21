@@ -381,10 +381,12 @@ export function GameRoom({ code, onBack }: GameRoomProps) {
             {sortedPlayers.map((player) => (
               <div className="arena-waiting-player" key={player.uid}>
                 <PlayerAvatar player={player} />
-                <div>
+
+                <div className="arena-waiting-player-info">
                   <strong>{player.name}</strong>
                   <small>{player.online ? "online" : "away"}</small>
                 </div>
+
                 {player.uid === room.hostUid && <Crown size={16} />}
               </div>
             ))}

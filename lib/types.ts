@@ -15,7 +15,11 @@ export type UnoValue =
   | "reverse"
   | "draw2"
   | "wild"
-  | "wild4";
+  | "wild4"
+  | "boo"
+  | "shield"
+  | "swap"
+  | "blast";
 
 export type UnoCard = {
   id: string;
@@ -33,6 +37,7 @@ export type PublicPlayer = {
   role: PlayerRole;
   cardCount: number;
   unoCalled: boolean;
+  shieldCount: number;
   joinedAt: number;
   lastSeen: number;
   online: boolean;
